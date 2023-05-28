@@ -1,15 +1,10 @@
 import uuid
+import datetime
+import re
 
 from dataclasses import dataclass, field
 from enum import Enum
 from advparser.exceptions import WrongQty, WrongOpenPrice, WrongStopLossPrice, WrongTakeProfitPrice
-
-
-prediction_properties_patterns = {
-    'open': list(map(str.upper, ['Open', 'Открытие', 'Точка входа'])),
-    'tp': list(map(str.upper, ['Цели', 'TP', 'Тейк-профит'])),
-    'sl': list(map(str.upper, ['Стоп', 'SL', 'Стоп-лосс']))
-}
 
 
 class OrderSide(Enum):
@@ -119,74 +114,55 @@ class ComplexOrder():
         self.risk_profit_rate = self.profit / self.loss if self.loss != 0 else 0
 
 
-# @dataclass
-# class AdviserPrediction():
-#     adviser: str
-#     dt: datetime.datetime = field(init=False, default_factory=datetime.datetime.now)
-#     side: str = field(init=False)
+prediction_properties_patterns = {
+    'open': list(map(str.upper, ['Open', 'Открытие', 'Точка входа'])),
+    'tp': list(map(str.upper, ['Цели', 'TP', 'Тейк-профит'])),
+    'sl': list(map(str.upper, ['Стоп', 'SL', 'Стоп-лосс']))
+}
 
-#     opens: list[float] = field(init=False, default_factory=list)
-#     stops: list[float]
-#     sl_value: float
-#     loss: float
 
-#     tp_adviser_list: list[float]
-#     tp_adviser: float
-#     tp_roi: float
-#     tp_value: float
-#     profit: float
+@dataclass
+class AdviserPrediction():
+    id: str = field(init=False)
+    dt: datetime.datetime = field(init=False, default_factory=datetime.datetime.now)
 
-#     risk_profit: float
+    adviser: str
+    prediction_text: str
 
-#     def __init__(self, adviser: str, prediction_str: str) -> None:
-#         def get_side(s: str) -> str:
-#             s = s.upper()
-#             if ('LONG' in s) or ('BUY' in s):
-#                 return 'Buy'
-#             if ('SHORT' in s) or ('SELL' in s):
-#                 return 'Sell'
-#             return ''
+    side: OrderSide = field(init=False)
+    opens: list[float] = field(init=False, default_factory=list)
+    stop_losses: list[float] = field(init=False)
+    take_profits: list[float] = field(init=False)
 
-#         def get_numbers(s: str) -> list:
-#             pattens_to_clear = [' 1-', ' 2-', ' 3-', ' 4-']
-#             for pattern in pattens_to_clear:
-#                 s = s.replace(pattern, ' ')
+    def __post_init__(self) -> None:
+        def get_side(s: str) -> OrderSide:
+            s = s.upper()
+            if ('SHORT' in s) or ('SELL' in s):
+                return OrderSide.SELL
 
-#             return list(map(float, re.findall(r"[-+]?\d*\.?\d+|\d+", s)))
+            return OrderSide.BUY
 
-#         self.adviser = adviser
-#         self.dt = datetime.datetime
+        def get_numbers(s: str) -> list:
+            pattens_to_clear = [' 1-', ' 2-', ' 3-', ' 4-']
+            for pattern in pattens_to_clear:
+                s = s.replace(pattern, ' ')
+
+            return list(map(float, re.findall(r"[-+]?\d*\.?\d+|\d+", s)))
         
-#         prediction = {}
-#         for s in prediction_str.upper().split('\n'):
-#             for k, patterns_list in prediction_properties_patterns.items():
-#                 if any([s.find(pattern) >= 0 for pattern in patterns_list]):
-#                     prediction[k] = sorted(list(map(abs, get_numbers(s))))
+        def generate_id() -> str:
+            return str(uuid.uuid4())
 
-#         self.side = get_side(prediction_str)
-#         self.open_adviser_list = prediction['open']
-#         self.sl_adviser_list = prediction['sl']
-#         self.tp_adviser_list = prediction['tp']
+        self.id = generate_id()
+        print(self.id)
+        self.dt = datetime.datetime
+       
+        self.side = get_side(self.prediction_text)
+        prediction = {}
+        for s in self.prediction_text.upper().split('\n'):
+            for k, patterns_list in prediction_properties_patterns.items():
+                if any([s.find(pattern) >= 0 for pattern in patterns_list]):
+                    prediction[k] = sorted(list(map(abs, get_numbers(s))))
 
-#         if self.side == 'Buy':
-#             self.open_adviser = min(self.open_adviser_list)
-#             self.sl_adviser = min(self.sl_adviser_list)
-#             self.tp_adviser = max(self.tp_adviser_list)
-#         else:
-#             self.open_adviser = max(self.open_adviser_list)
-#             self.sl_adviser = max(self.sl_adviser_list)
-#             self.tp_adviser = min(self.tp_adviser_list)
-
-#         self.tp_roi = abs(1 - self.tp_adviser / self.open_adviser)
-#         self.sl_roi = abs(1 - self.sl_adviser / self.open_adviser)
-#         self.risk_profit = self.tp_roi / self.sl_roi
-
-#     def calc(self, qty: float, leverage: float) -> None:
-#         self.qty = qty
-#         self.leverage = leverage
-
-#         self.open_value = self.qty * self.open_adviser
-#         self.sl_value = self.qty * self.sl_adviser
-#         self.tp_value = self.qty * self.tp_adviser
-#         self.loss = abs(self.sl_value - self.open_value)
-#         self.profit = abs(self.tp_value - self.open_value)
+        self.opens = prediction['open']
+        self.stop_losses = prediction['sl']
+        self.take_profits = prediction['tp']
