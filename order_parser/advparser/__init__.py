@@ -77,13 +77,46 @@ class SimpleOrder():
         # Calc Order params
         self.value = self.qty * self.open_price
 
-        self.loss = self.qty * abs(self.open_price - self.stop_loss)
-        self.loss_roi = self.loss / self.value
+        self.loss = self.qty * abs(self.open_price - self.stop_loss) \
+            if self.stop_loss != 0 else 0
+        self.profit = self.qty * abs(self.open_price - self.take_profit) \
+            if self.take_profit !=0 else 0
 
-        self.profit = self.qty * abs(self.open_price - self.take_profit)
-        self.profit_roi = self.profit / self.value
+        self.loss_roi, self.profit_roi = 0, 0
+        if self.value != 0:
+            self.loss_roi = self.loss / self.value
+            self.profit_roi = self.profit / self.value
 
-        self.risk_profit_rate = self.profit / self.loss
+        self.risk_profit_rate = self.profit / self.loss if self.loss != 0 else 0
+
+@dataclass
+class ComplexOrder():
+    id: str = field(init=False)
+    orders: list[SimpleOrder] = field(init=False, default_factory=list)
+    side: OrderSide = field(init=False)
+    qty: float = field(init=False)
+    value: float = field(init=False)
+
+    loss: float = field(init=False)
+    profit: float = field(init=False)
+
+    risk_profit_rate: float = field(init=False)
+
+    def generate_id(self) -> str:
+        return str(uuid.uuid4())
+
+    def __post_init__(self) -> None:
+        self.id = self.generate_id()
+
+    def calculate(self) -> None:
+        self.side = self.orders[0].side
+
+        self.qty = sum([o.qty for o in self.orders])
+        self.value = sum([o.value for o in self.orders])
+        self.loss = sum([o.loss for o in self.orders])
+        self.profit = sum([o.profit for o in self.orders])
+
+        self.risk_profit_rate = self.profit / self.loss if self.loss != 0 else 0
 
 
 # @dataclass

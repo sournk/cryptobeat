@@ -1,4 +1,4 @@
-from advparser import OrderSide, SimpleOrder
+from advparser import OrderSide, SimpleOrder, ComplexOrder
 
 
 def main() -> None:
@@ -24,17 +24,21 @@ def main() -> None:
 
         """
 
-    # ap = AdviserPrediction('Test', input)
-    # ap.calc(100, 25)
-    # print(ap)
+    co = ComplexOrder()
+    co.orders = [SimpleOrder(side=OrderSide.BUY, qty=1, open_price=10, stop_loss=0, take_profit=15), 
+                 SimpleOrder(side=OrderSide.BUY, qty=2, open_price=11, stop_loss=0, take_profit=18)]
 
-    so = SimpleOrder(side=OrderSide.BUY,
-                     qty=10,
-                     open_price=10,
-                     stop_loss=2,
-                     take_profit=120)
+    co.orders.append(SimpleOrder(side=OrderSide.BUY, qty=3,
+                                open_price=12, stop_loss=0, take_profit=22))
+    
+    co.calculate()
+    print(co)
 
-    print(so)
+    # co.orders.pop()    
+
+
+
+
 
 if __name__ == '__main__':
     main()
