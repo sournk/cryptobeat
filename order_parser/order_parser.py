@@ -1,3 +1,4 @@
+import pprint
 from advparser import OrderSide, SimpleOrder, ComplexOrder, AdviserPrediction
 
 
@@ -14,15 +15,15 @@ def main() -> None:
     🔴 Стоп - 5.965
     """
 
-    input = """
-    SOL | USDT = LONG
+    # input = """
+    # SOL | USDT = LONG
 
-    Точка входа: 19.180
-    Тейк-профит: 19.422 | 19.854
-    Кредитное плечо: 50x
-    Стоп-лосс: 18.609
+    # Точка входа: 19.180
+    # Тейк-профит: 19.422 | 19.854
+    # Кредитное плечо: 50x
+    # Стоп-лосс: 18.609
 
-        """
+    #     """
 
     # co = ComplexOrder()
     # co.orders = [SimpleOrder(side=OrderSide.BUY, qty=1, open_price=10, stop_loss=0, take_profit=15), 
@@ -35,7 +36,12 @@ def main() -> None:
     # print(co)
 
     ap = AdviserPrediction('Me', input)
-    print(ap)
+    co = ap.create_complex_order(ap.get_qty_by_loss(10), 'DynamicSL')
+    print(co.risk_profit_rate)
+    ap.print()
+    print(len(co.orders))
+    pprint.pprint(co.orders)
+    
 
 
 
