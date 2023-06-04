@@ -20,5 +20,10 @@ class WrongTakeProfitPrice(WrongSimpleOrder):
 class WrongStopLossPrice(WrongSimpleOrder):
     pass
 
+
 class CantRequestSymbolTicker(Exception):
+    pass
+
+
+class ErrorPlaceOrder(Exception):
     pass

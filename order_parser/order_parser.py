@@ -84,6 +84,17 @@ def main() -> None:
 
     so.update_current_price_from_exchange()
 
+    session = HTTP(
+        testnet=False,
+        api_key=config.API_KEY,
+        api_secret=config.SECRET_KEY,
+    )
+
+    try:
+        so.place_order(session)
+    except:
+        pass
+
     # print(so)
     # print(f'{so.open_losses[so.stop_losses[0]].roi=}')
     # print(f'{so.open_losses[so.stop_losses[0]].value=}')
@@ -104,7 +115,7 @@ def main() -> None:
     #     price=0.01,
     # ))
 
-    
+    print('Done')
 
 
 

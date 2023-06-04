@@ -8,8 +8,7 @@ from pybit.unified_trading import HTTP
 
 from dataclasses import dataclass, field
 from enum import Enum
-from advparser.exceptions import WrongMarketPosition, WrongQty, WrongOpenPrice, WrongStopLossPrice,\
-    WrongTakeProfitPrice, CantRequestSymbolTicker
+from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +97,8 @@ class SimpleOrder():
     '''Class of Market Order'''
 
     id: str = field(init=False)
+    external_id: str = field(init=False, default='')
+
     category: OrderCategory
     symbol: str
     side: OrderSide
@@ -208,19 +209,27 @@ class SimpleOrder():
         '''
         Places order by open price
         '''
+        logger.info(f'Placing order {self} via session.place_order')
+        try:
+            res = session.place_order(
+                category=self.category.value,
+                symbol=self.symbol,
+                side=self.side.value,
+                orderType=self.type.value,
+                qty=self.open.qty,
+                price=self.open.price,
+                orderLinkId=self.id,
+            )
+            if res['retCode'] == 0:
+                self.external_id = res['result']['orderId']
+                logger.info(f'Order successfully placed {res}')
+            else:
+                logger.error(f'Place order error {res}')
+                raise ErrorPlaceOrder(res)
 
-        # print(session.get_orderbook(category="linear", symbol="PEOPLEUSDT"))
-
-        print(session.place_order(
-            category=self.category.value,
-            symbol=self.symbol,
-            side=self.side.value,
-            orderType=self.type.value,
-            qty=1,
-            price=0.01,
-        ))
-
-
+        except Exception as e:
+            logger.exception(f'Error placing order {e}')
+            raise ErrorPlaceOrder
 
 
 
