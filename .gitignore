@@ -3,3 +3,4 @@
 /.venv
 /.vscode
 order_parser/advparser/__pycache__/__init__.cpython-39.pyc
+order_parser/secret.py
