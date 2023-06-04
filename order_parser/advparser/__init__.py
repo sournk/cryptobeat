@@ -231,6 +231,27 @@ class SimpleOrder():
             logger.exception(f'Error placing order {e}')
             raise ErrorPlaceOrder
 
+    def set_trading_stop(self, session: HTTP) -> None:
+        stop_loss = self.stop_losses[0].price
+        take_profit = self.take_profits[-1].price
+
+        session.set_trading_stop(
+            category=self.category.value,
+            symbol=self.symbol,
+            takeProfit=take_profit,
+            stopLoss=stop_loss,
+            tpTriggerBy="MarkPrice",
+            slTriggerBy="MarkPrice",
+            tpslMode="Full",
+            tpOrderType="Market",
+            slOrderType="Market",
+            # tpSize="50",
+            # slSize="50",
+            # tpLimitPrice="0.49",
+            # slLimitPrice="0.21",
+            positionIdx=0
+        )
+
 
 
 # @dataclass

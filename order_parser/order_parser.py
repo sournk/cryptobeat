@@ -75,7 +75,7 @@ def main() -> None:
     #     pass
 
     so = SimpleOrder(category=OrderCategory.LINEAR,
-                     type=OrderType.LIMIT,
+                     type=OrderType.MARKET,
                      symbol='PEOPLEUSDT',
                      side=OrderSide.BUY,
                      open=MarketPosition(1, 0.01),
@@ -94,6 +94,8 @@ def main() -> None:
         so.place_order(session)
     except:
         pass
+
+    so.set_trading_stop(session)
 
     # print(so)
     # print(f'{so.open_losses[so.stop_losses[0]].roi=}')
