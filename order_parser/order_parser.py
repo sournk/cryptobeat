@@ -78,9 +78,11 @@ def main() -> None:
                      type=OrderType.MARKET,
                      symbol='PEOPLEUSDT',
                      side=OrderSide.BUY,
-                     open=MarketPosition(1, 0.01),
+                     open=MarketPosition(3, 0.01),
                      stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
-                     take_profits=[MarketPosition(1, 0.05), MarketPosition(1, 0.03)])
+                     take_profits=[MarketPosition(3, 0.05), 
+                                   MarketPosition(1, 0.03),
+                                   MarketPosition(1, 0.04)])
 
     so.update_current_price_from_exchange()
 
@@ -95,7 +97,7 @@ def main() -> None:
     except:
         pass
 
-    # so.set_trading_stop(session)
+    so.set_trading_stop(session)
 
     # print(so)
     # print(f'{so.open_losses[so.stop_losses[0]].roi=}')

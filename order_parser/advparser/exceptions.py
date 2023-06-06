@@ -27,3 +27,7 @@ class CantRequestSymbolTicker(Exception):
 
 class ErrorPlaceOrder(Exception):
     pass
+
+
+class ErrorSetTradingStop(Exception):
+    pass

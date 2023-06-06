@@ -7,7 +7,7 @@ from pybit.unified_trading import HTTP
 from dataclasses import dataclass, field
 from functools import total_ordering
 from enum import Enum
-from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder
+from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder, ErrorSetTradingStop
 
 logger = logging.getLogger(__name__)
 
@@ -227,7 +227,7 @@ class SimpleOrder():
         '''
         Places order by open price
         '''
-        logger.info(f'Placing order {self} via session.place_order')
+        logger.info(f'Placing order via session.place_order() {self}')
         try:
             tp = self.take_profits[-1].price if self.take_profits else 0
             sl = self.stop_losses[-1].price if self.stop_losses else 0
@@ -253,24 +253,67 @@ class SimpleOrder():
             logger.exception(f'Error placing order {e}')
             raise ErrorPlaceOrder
 
+    def set_partial_take_profits(self, session: HTTP) -> None:
+        if self.take_profits:
+            logger.info(
+                f'Start setting {len(self.take_profits)} partial take profits via session.set_trading_stop() for order {self}')
+            for num, take_profit in enumerate(self.take_profits[0:-1]):
+                logger.info(
+                    f'Setting partial take profit {num} {take_profit=}')
+
+                try:
+                    res = session.set_trading_stop(
+                        category=self.category.value,
+                        symbol=self.symbol,
+                        takeProfit=str(take_profit.price),
+                        tpTriggerBy="MarkPrice",
+                        tpslMode="Partial",
+                        tpOrderType="Market",
+                        tpSize=str(take_profit.qty),
+                        # tpLimitPrice="",
+                        positionIdx=0
+                    )
+                    if res['retCode'] != 0:
+                        logger.error(f'Set partial take profit error {res}')
+                        raise ErrorSetTradingStop(res)
+                    else:
+                        logger.info(f'Partial take profit successfully set {res}')
+
+                except Exception as e:
+                    logger.exception(f'Error setting partial take profit {e}')
+                    raise ErrorSetTradingStop
+
+    def set_partial_stop_losses(self, session: HTTP) -> None:
+        if self.stop_losses:
+            logger.info(
+                f'Start setting {len(self.stop_losses)} partial stop losses via session.set_trading_stop() for order {self}')
+            for num, stop_loss in enumerate(self.stop_losses[0:-1]):
+                logger.info(
+                    f'Setting partial stop loss {num} {stop_loss=}')
+
+                try:
+                    res = session.set_trading_stop(
+                        category=self.category.value,
+                        symbol=self.symbol,
+                        stopLoss=str(stop_loss.price),
+                        slTriggerBy="MarkPrice",
+                        tpslMode="Partial",
+                        slOrderType="Market",
+                        slSize=str(stop_loss.qty),
+                        # tpLimitPrice="",
+                        positionIdx=0
+                    )
+                    if res['retCode'] != 0:
+                        logger.error(f'Set partial stop loss error {res}')
+                        raise ErrorSetTradingStop(res)
+                    else:
+                        logger.info(
+                            f'Partial stop loss successfully set {res}')
+
+                except Exception as e:
+                    logger.exception(f'Error setting partial stop loss {e}')
+                    raise ErrorSetTradingStop
+
     def set_trading_stop(self, session: HTTP) -> None:
-        stop_loss = self.stop_losses[0].price
-        take_profit = self.take_profits[-1].price
-
-        session.set_trading_stop(
-            category=self.category.value,
-            symbol=self.symbol,
-            takeProfit=take_profit,
-            stopLoss=stop_loss,
-            tpTriggerBy="MarkPrice",
-            slTriggerBy="MarkPrice",
-            tpslMode="Full",
-            tpOrderType="Market",
-            slOrderType="Market",
-            # tpSize="50",
-            # slSize="50",
-            # tpLimitPrice="0.49",
-            # slLimitPrice="0.21",
-            positionIdx=0
-        )
-
+        self.set_partial_stop_losses(session)
+        self.set_partial_take_profits(session)
