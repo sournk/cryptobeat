@@ -187,8 +187,9 @@ class SimpleOrder():
                     self.open.value if self.open.value != 0 else 0
 
         max_profit = max(
-            [profit.value for profit in self.open_profits.values()])
-        max_loss = max([loss.value for loss in self.open_losses.values()])
+            [profit.value for profit in self.open_profits.values()]) if self.open_profits else 0
+        max_loss = max(
+            [loss.value for loss in self.open_losses.values()]) if self.open_losses else 0
         self.risk_rate = max_profit / max_loss if max_loss != 0 else 0
 
     def update_current_price_from_exchange(self) -> float:
@@ -228,10 +229,8 @@ class SimpleOrder():
         '''
         logger.info(f'Placing order {self} via session.place_order')
         try:
-            tp = self.take_profits[-1].price if len(
-                self.take_profits) > 0 else 0
-            sl = self.stop_losses[-1].price if len(
-                self.stop_losses) > 0 else 0
+            tp = self.take_profits[-1].price if self.take_profits else 0
+            sl = self.stop_losses[-1].price if self.stop_losses else 0
             res = session.place_order(
                 category=self.category.value,
                 symbol=self.symbol,
