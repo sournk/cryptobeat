@@ -4,7 +4,7 @@ import logging
 from logging import StreamHandler, Formatter
 
 import config
-from advparser import OrderSide, OrderCategory, OrderType, SimpleOrder, MarketPosition, logger
+from simpleorder import OrderSide, OrderCategory, OrderType, SimpleOrder, MarketPosition, logger
 # , ComplexOrder, AdviserPrediction
 
 from pybit.unified_trading import HTTP
@@ -79,8 +79,8 @@ def main() -> None:
                      symbol='PEOPLEUSDT',
                      side=OrderSide.BUY,
                      open=MarketPosition(1, 0.01),
-                     stop_losses=[MarketPosition(1, 0.005)],
-                     take_profits=[MarketPosition(1, 0.03)])
+                     stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
+                     take_profits=[MarketPosition(1, 0.05), MarketPosition(1, 0.03)])
 
     so.update_current_price_from_exchange()
 
@@ -95,7 +95,7 @@ def main() -> None:
     except:
         pass
 
-    so.set_trading_stop(session)
+    # so.set_trading_stop(session)
 
     # print(so)
     # print(f'{so.open_losses[so.stop_losses[0]].roi=}')
@@ -118,6 +118,7 @@ def main() -> None:
     # ))
 
     print('Done')
+
 
 
 
