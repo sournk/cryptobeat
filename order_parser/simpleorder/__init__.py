@@ -254,6 +254,10 @@ class SimpleOrder():
             raise ErrorPlaceOrder
 
     def set_partial_take_profits(self, session: HTTP) -> None:
+        '''
+        Adds partial TP. Partial means all of them except last=best,
+        which is set inside place_order()
+        '''
         if self.take_profits:
             logger.info(
                 f'Start setting {len(self.take_profits)} partial take profits via session.set_trading_stop() for order {self}')
@@ -284,6 +288,10 @@ class SimpleOrder():
                     raise ErrorSetTradingStop
 
     def set_partial_stop_losses(self, session: HTTP) -> None:
+        '''
+        Adds partial SL. Partial means all of them except last=best,
+        which is set inside place_order()
+        '''
         if self.stop_losses:
             logger.info(
                 f'Start setting {len(self.stop_losses)} partial stop losses via session.set_trading_stop() for order {self}')
@@ -315,5 +323,9 @@ class SimpleOrder():
                     raise ErrorSetTradingStop
 
     def set_trading_stop(self, session: HTTP) -> None:
+        '''
+        Adds partial SL and TP. Partial means all of them except last=best,
+        which is set inside place_order()
+        '''
         self.set_partial_stop_losses(session)
         self.set_partial_take_profits(session)
