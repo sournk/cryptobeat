@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from .order_details import OrderCategory
 
 
 class LeverageFilter(BaseModel):
@@ -22,13 +21,12 @@ class LotSizeFilter(BaseModel):
 
 
 class InstrumentInfo(BaseModel):
-    category: OrderCategory
     symbol: str
 
     launchTime: str
     deliveryTime: str
     deliveryFeeRate: str
-    priceScale: str
+    priceScale: float
     leverageFilter: LeverageFilter
     priceFilter: PriceFilter
     lotSizeFilter: LotSizeFilter

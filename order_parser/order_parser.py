@@ -76,7 +76,8 @@ def main() -> None:
 
     so = SimpleOrder(category=OrderCategory.LINEAR,
                      type=OrderType.MARKET,
-                     symbol='PEOPLEUSDT',
+                    #  symbol='PEOPLEUSDT',
+                     symbol='BTCUSDT',
                      side=OrderSide.BUY,
                      open=MarketPosition(3, 0.01),
                      stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
@@ -84,15 +85,18 @@ def main() -> None:
                                    MarketPosition(1, 0.03),
                                    MarketPosition(1, 0.04)])
 
-    so.update_current_price_from_exchange()
+    # so.update_current_price_from_exchange()
 
-    print(so)
 
     session = HTTP(
         testnet=False,
         api_key=config.API_KEY,
         api_secret=config.SECRET_KEY,
     )
+
+    so.update_instrument_info_from_exchange(session)
+    print(so.instrument_info)
+    # print(so)
 
     # try:
     #     so.place_order(session)

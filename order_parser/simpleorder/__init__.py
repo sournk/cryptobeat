@@ -7,8 +7,9 @@ from pybit.unified_trading import HTTP
 from dataclasses import dataclass, field
 
 from .order_details import OrderCategory, OrderSide, OrderType
+from .instrument import InstrumentInfo
 from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder, \
-                                 ErrorSetTradingStop
+                                 ErrorSetTradingStop, ErrorGetInstrumentInfo
 from .order_details import MarketPosition
 
 logger = logging.getLogger(__name__)
@@ -22,9 +23,13 @@ class SimpleOrder():
     external_id: str = field(init=False, default='')
 
     category: OrderCategory
-    symbol: str
     side: OrderSide
     type: OrderType
+    symbol: str
+
+    # Info about symbol
+    instrument_info: InstrumentInfo = field(init=False,
+                                            default=None)
 
     open: MarketPosition = field()               # Open MarketPosition
     current: MarketPosition = field(init=False)  # Current MarketPosition
@@ -124,6 +129,27 @@ class SimpleOrder():
             [loss.value for loss in self.open_losses.values()]) \
             if self.open_losses else 0
         self.risk_rate = max_profit / max_loss if max_loss != 0 else 0
+
+    def update_instrument_info_from_exchange(self, session: HTTP) -> None:
+        ''' Get instrument info about symbol from exchange'''
+        try:
+            logger.info(
+                'Start getting instrument info via '
+                f'session.get_instruments_info() for order {self}')
+            res = session.get_instruments_info(
+                category=self.category.value,
+                symbol=self.symbol,
+                )
+
+            if res['retCode'] != 0:
+                logger.error(f'Get instrument info error {res}')
+                raise ErrorGetInstrumentInfo(res)
+            self.instrument_info = InstrumentInfo(**res['result']['list'][0])
+            logger.info(
+                f'Instrument info successfully got {res}')
+        except Exception as e:
+            logger.error(f'Get instrument info error {e}')
+            raise ErrorGetInstrumentInfo
 
     def update_current_price_from_exchange(self) -> float:
         '''Updates current price from exchange'''
@@ -252,9 +278,9 @@ class SimpleOrder():
                     if res['retCode'] != 0:
                         logger.error(f'Set partial stop loss error {res}')
                         raise ErrorSetTradingStop(res)
-                    else:
-                        logger.info(
-                            f'Partial stop loss successfully set {res}')
+
+                    logger.info(
+                        f'Partial stop loss successfully set {res}')
 
                 except Exception as e:
                     logger.exception(f'Error setting partial stop loss {e}')

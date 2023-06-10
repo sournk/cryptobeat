@@ -31,3 +31,7 @@ class ErrorPlaceOrder(Exception):
 
 class ErrorSetTradingStop(Exception):
     pass
+
+
+class ErrorGetInstrumentInfo(Exception):
+    pass

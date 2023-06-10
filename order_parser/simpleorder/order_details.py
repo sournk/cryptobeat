@@ -1,5 +1,10 @@
+from decimal import Decimal, ROUND_DOWN
+import math
 from enum import Enum
 from functools import total_ordering
+from decimal import Decimal
+
+from simpleorder.instrument import InstrumentInfo
 
 
 class OrderSide(Enum):
@@ -87,3 +92,53 @@ class MarketPosition():
 
     def __lt__(self, other) -> bool:
         return self.price < other.price
+
+    def fit_price(self, instrument_info: InstrumentInfo) -> float:
+        self.price = fit_to_chunk(
+                        val=self.price,
+                        tick_size=instrument_info.priceFilter.tickSize,
+                        min_value=instrument_info.priceFilter.minPrice,
+                        max_value=instrument_info.priceFilter.maxPrice)
+        return self.price
+
+    def fit_qty(self, instrument_info: InstrumentInfo) -> float:
+        self.qty = fit_to_chunk(
+            val=self.qty,
+            tick_size=instrument_info.lotSizeFilter.qtyStep,
+            min_value=instrument_info.lotSizeFilter.minOrderQty,
+            max_value=instrument_info.lotSizeFilter.maxOrderQty)
+        return self.qty
+
+    def fit(self, instrument_info: InstrumentInfo) -> None:
+        self.fit_price()
+        self.fit_qty()
+
+
+def roundup(x, ticksize):
+    res = math.ceil(x / ticksize) * ticksize
+    res = Decimal(str(res)).quantize(Decimal(str(ticksize)))
+    return res
+
+
+def rounddown(x, ticksize):
+    res = math.floor(x / ticksize) * ticksize
+    res = Decimal(str(res)).quantize(Decimal(str(ticksize)))
+    return res
+
+
+def roundtick(x, ticksize):
+    res = round(x / ticksize) * ticksize
+    res = Decimal(str(res)).quantize(Decimal(str(ticksize)))
+    return float(res)
+
+
+def fit_to_chunk(val: float, tick_size: float,
+                 min_value: float, max_value: float) -> float:
+    res = roundtick(val, tick_size)
+    res = max(res, min_value)
+    res = min(res, max_value)
+    return res
+
+
+def count_decimals(n):
+    return Decimal(str(n)).as_tuple().exponent
