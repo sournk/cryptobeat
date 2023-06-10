@@ -3,5 +3,4 @@
 /.venv
 /.vscode
 order_parser/secret.py
-order_parser/simpleorder/__pycache__/__init__.cpython-39.pyc
-order_parser/advparser/__pycache__/__init__.cpython-39.pyc
+*.pyc

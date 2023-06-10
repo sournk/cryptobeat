@@ -80,11 +80,13 @@ def main() -> None:
                      side=OrderSide.BUY,
                      open=MarketPosition(3, 0.01),
                      stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
-                     take_profits=[MarketPosition(3, 0.05), 
+                     take_profits=[MarketPosition(3, 0.055555555555555), 
                                    MarketPosition(1, 0.03),
                                    MarketPosition(1, 0.04)])
 
     so.update_current_price_from_exchange()
+
+    print(so)
 
     session = HTTP(
         testnet=False,
@@ -92,12 +94,22 @@ def main() -> None:
         api_secret=config.SECRET_KEY,
     )
 
-    try:
-        so.place_order(session)
-    except:
-        pass
+    # try:
+    #     so.place_order(session)
+    # except:
+    #     pass
 
-    so.set_trading_stop(session)
+    # try:
+    #     so.set_trading_stop(session)
+    # except:
+    #     pass
+
+    # try:
+    #     so.set_trailing_stop(session, 
+    #                         trailing_stop_price_distance=so.take_profits[0].price-so.open.price,
+    #                         activation_price=so.take_profits[0].price)
+    # except:
+    #     pass
 
     # print(so)
     # print(f'{so.open_losses[so.stop_losses[0]].roi=}')
