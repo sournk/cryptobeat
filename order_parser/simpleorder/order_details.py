@@ -62,9 +62,7 @@ class MarketPosition():
     def value(self, val) -> None:
         self.__value = val
 
-    def __init__(self, qty: float, price: float,
-                 param_auto_tuning: bool = True) -> None:
-        self.params_auto_tuning = param_auto_tuning
+    def __init__(self, qty: float, price: float) -> None:
         self.__qty, self.__price, self.__value = 0, 0, 0
         self.qty = qty
         self.price = price

@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from functools import total_ordering
 from enum import Enum
 
-
 from .order_details import OrderCategory, OrderSide, OrderType
 from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder, ErrorSetTradingStop
 from .order_details import MarketPosition
