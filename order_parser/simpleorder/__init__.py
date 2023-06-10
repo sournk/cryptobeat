@@ -5,11 +5,10 @@ import logging
 from pybit.unified_trading import HTTP
 
 from dataclasses import dataclass, field
-from functools import total_ordering
-from enum import Enum
 
 from .order_details import OrderCategory, OrderSide, OrderType
-from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder, ErrorSetTradingStop
+from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder, \
+                                 ErrorSetTradingStop
 from .order_details import MarketPosition
 
 logger = logging.getLogger(__name__)
@@ -35,15 +34,19 @@ class SimpleOrder():
     take_profits: list[MarketPosition] = field(
         default_factory=list)  # Order take profits list
 
+    # List of losses relative to open MarketPosition
     open_losses: dict[MarketPosition, MarketPosition] = field(
-        init=False, default_factory=dict)      # List of losses relative to open MarketPosition
+        init=False, default_factory=dict)
+    # List of losses relative to current MarketPosition
     current_losses: dict[MarketPosition, MarketPosition] = field(
-        init=False, default_factory=dict)   # List of losses relative to current MarketPosition
+        init=False, default_factory=dict)
 
+    # List of profits relative to open MarketPosition
     open_profits: dict[MarketPosition, MarketPosition] = field(
-        init=False, default_factory=dict)     # List of profits relative to open MarketPosition
+        init=False, default_factory=dict)
+    # List of profits relative to current MarketPosition
     current_profits: dict[MarketPosition, MarketPosition] = field(
-        init=False, default_factory=dict)  # List of profits relative to current MarketPosition
+        init=False, default_factory=dict)
 
     risk_rate: float = field(init=False, default=0)  # Risk rate against open
 
@@ -68,48 +71,58 @@ class SimpleOrder():
         for stop_loss in self.stop_losses:
             if self.side == OrderSide.BUY:
                 self.open_losses[stop_loss] = self.open - stop_loss
-                self.open_losses[stop_loss].roi = self.open_losses[stop_loss].value / \
+                self.open_losses[stop_loss].roi = \
+                    self.open_losses[stop_loss].value / \
                     self.open.value if self.open.value != 0 else 0
 
                 self.current_losses[stop_loss] = self.current - stop_loss
-                self.current_losses[stop_loss].roi = self.current_losses[stop_loss].value / \
+                self.current_losses[stop_loss].roi = \
+                    self.current_losses[stop_loss].value / \
                     self.open.value if self.open.value != 0 else 0
             else:
                 self.open_losses[stop_loss] = stop_loss - self.open
-                self.open_losses[stop_loss].roi = self.open_losses[stop_loss].value / \
+                self.open_losses[stop_loss].roi = \
+                    self.open_losses[stop_loss].value / \
                     self.open.value if self.open.value != 0 else 0
 
                 self.current_losses[stop_loss] = stop_loss - self.current
-                self.current_losses[stop_loss].roi = self.current_losses[stop_loss].value / \
+                self.current_losses[stop_loss].roi = \
+                    self.current_losses[stop_loss].value / \
                     self.open.value if self.open.value != 0 else 0
 
         # Sort take_profits from worse to best based on order side
         self.take_profits = sorted(self.take_profits,
-                                  reverse=self.side == OrderSide.SELL)
+                                   reverse=self.side == OrderSide.SELL)
         self.open_profits.clear()
         self.current_profits.clear()
         for take_profit in self.take_profits:
             if self.side == OrderSide.BUY:
                 self.open_profits[take_profit] = take_profit - self.open
-                self.open_profits[take_profit].roi = self.open_profits[take_profit].value / \
+                self.open_profits[take_profit].roi = \
+                    self.open_profits[take_profit].value / \
                     self.open.value if self.open.value != 0 else 0
 
                 self.current_profits[take_profit] = take_profit - self.current
-                self.current_profits[take_profit].roi = self.current_profits[take_profit].value / \
+                self.current_profits[take_profit].roi = \
+                    self.current_profits[take_profit].value / \
                     self.open.value if self.open.value != 0 else 0
             else:
                 self.open_profits[take_profit] = self.open - take_profit
-                self.open_profits[take_profit].roi = self.open_profits[take_profit].value / \
+                self.open_profits[take_profit].roi = \
+                    self.open_profits[take_profit].value / \
                     self.open.value if self.open.value != 0 else 0
 
                 self.current_profits[take_profit] = self.current - take_profit
-                self.current_profits[take_profit].roi = self.current_profits[take_profit].value / \
+                self.current_profits[take_profit].roi = \
+                    self.current_profits[take_profit].value / \
                     self.open.value if self.open.value != 0 else 0
 
         max_profit = max(
-            [profit.value for profit in self.open_profits.values()]) if self.open_profits else 0
+            [profit.value for profit in self.open_profits.values()]) \
+            if self.open_profits else 0
         max_loss = max(
-            [loss.value for loss in self.open_losses.values()]) if self.open_losses else 0
+            [loss.value for loss in self.open_losses.values()]) \
+            if self.open_losses else 0
         self.risk_rate = max_profit / max_loss if max_loss != 0 else 0
 
     def update_current_price_from_exchange(self) -> float:
@@ -127,7 +140,8 @@ class SimpleOrder():
                 "GET", url, headers=headers, data=payload).json()
         except Exception:
             logger.exception(
-                f"Error of requests.request('GET', url={url}) exchange tickers")
+                f"Error of requests.request('GET', url={url}) "
+                "exchange tickers")
             raise CantRequestSymbolTicker
 
         try:
@@ -137,7 +151,8 @@ class SimpleOrder():
             logger.info(f'{self.current=} updated')
         except Exception:
             logger.exception(
-                f"Error price update. Not found {self.symbol=} in exchange tickers list")
+                f'Error price update. Not found {self.symbol=} in exchange '
+                'tickers list')
             raise CantRequestSymbolTicker
 
         self.update()
@@ -180,7 +195,8 @@ class SimpleOrder():
         '''
         if self.take_profits:
             logger.info(
-                f'Start setting {len(self.take_profits)} partial take profits via session.set_trading_stop() for order {self}')
+                f'Start setting {len(self.take_profits)} partial take profits '
+                f'via session.set_trading_stop() for order {self}')
             for num, take_profit in enumerate(self.take_profits[0:-1]):
                 logger.info(
                     f'Setting partial take profit {num} {take_profit=}')
@@ -201,7 +217,8 @@ class SimpleOrder():
                         logger.error(f'Set partial take profit error {res}')
                         raise ErrorSetTradingStop(res)
                     else:
-                        logger.info(f'Partial take profit successfully set {res}')
+                        logger.info('Partial take profit successfully set '
+                                    f'{res}')
 
                 except Exception as e:
                     logger.exception(f'Error setting partial take profit {e}')
@@ -214,7 +231,8 @@ class SimpleOrder():
         '''
         if self.stop_losses:
             logger.info(
-                f'Start setting {len(self.stop_losses)} partial stop losses via session.set_trading_stop() for order {self}')
+                f'Start setting {len(self.stop_losses)} partial stop losses '
+                f'via session.set_trading_stop() for order {self}')
             for num, stop_loss in enumerate(self.stop_losses[0:-1]):
                 logger.info(
                     f'Setting partial stop loss {num} {stop_loss=}')
@@ -250,7 +268,7 @@ class SimpleOrder():
         # self.set_partial_stop_losses(session)
         self.set_partial_take_profits(session)
 
-    def set_trailing_stop(self, session: HTTP, 
+    def set_trailing_stop(self, session: HTTP,
                           trailing_stop_price_distance: float,
                           activation_price: float) -> None:
         '''
@@ -262,7 +280,8 @@ class SimpleOrder():
         '''
         if self.take_profits:
             logger.info(
-                f'Start setting trailing stop via session.set_trading_stop() for order {self}')
+                f'Start setting trailing stop via '
+                f'session.set_trading_stop() for order {self}')
 
             try:
                 res = session.set_trading_stop(

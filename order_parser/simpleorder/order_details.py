@@ -68,7 +68,8 @@ class MarketPosition():
         self.price = price
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.qty=}, {self.price=}, {self.value=})'
+        return f'{self.__class__.__name__}({self.qty=}, '\
+            '{self.price=}, {self.value=})'
 
     def __add__(self, other):
         new_price = (self.value + other.value) / (self.qty + other.qty)\

@@ -33,6 +33,3 @@ class InstrumentInfo(BaseModel):
     priceFilter: PriceFilter
     lotSizeFilter: LotSizeFilter
     fundingInterval: int
-
-
-
