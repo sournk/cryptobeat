@@ -240,6 +240,8 @@ class SimpleOrder():
                 self.external_id = res['result']['orderId']
                 self.current.qty = self.open.qty
                 self.api_update_current_price(session)
+                if self.type == OrderType.MARKET:
+                    self.open = copy.copy(self.current)
                 logger.info(f'Order {self.id=} successfully placed '
                     f'{self.symbol=} {self.side.value=} '
                     f'{self.type.value=} {self.open.qty=} '
