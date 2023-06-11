@@ -5,7 +5,7 @@ from pybit.unified_trading import HTTP
 
 from dataclasses import dataclass, field
 
-from .crypto_math import ED
+from crypto_math import ED
 from .order_details import OrderCategory, OrderSide, OrderType
 from .instrument import InstrumentInfo
 from .exceptions import ErrorUpdateCurrentPrice, ErrorPlaceOrder, \
@@ -170,7 +170,7 @@ class SimpleOrder():
 
     def fit_market_positions(self) -> None:
         '''
-        Fit all market postions of the order
+        Fit all market positions of the order
         '''
         if self.instrument_info is None:
             return

@@ -1,38 +1,18 @@
-class WrongMarketPosition(Exception):
+class AdviserPredictionParseError(Exception):
     pass
 
 
-class WrongSimpleOrder(Exception):
+class AdviserPredictionOrderSideParseError(AdviserPredictionParseError):
     pass
 
 
-class WrongQty(WrongSimpleOrder):
+class AdviserPredictionOpenPriceParseError(AdviserPredictionParseError):
     pass
 
 
-class WrongOpenPrice(WrongSimpleOrder):
+class AdviserPredictionStopLossParseError(AdviserPredictionParseError):
     pass
 
 
-class WrongTakeProfitPrice(WrongSimpleOrder):
-    pass
-
-
-class WrongStopLossPrice(WrongSimpleOrder):
-    pass
-
-
-class ErrorPlaceOrder(Exception):
-    pass
-
-
-class ErrorSetTradingStop(Exception):
-    pass
-
-
-class ErrorGetInstrumentInfo(Exception):
-    pass
-
-
-class ErrorUpdateCurrentPrice(Exception):
+class AdviserPredictionTakeProfitParseError(AdviserPredictionParseError):
     pass

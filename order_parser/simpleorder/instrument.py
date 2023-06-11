@@ -1,6 +1,6 @@
 from pydantic import BaseModel, validator
 
-from simpleorder.crypto_math import ED
+from crypto_math import ED
 
 
 class LeverageFilter(BaseModel):
