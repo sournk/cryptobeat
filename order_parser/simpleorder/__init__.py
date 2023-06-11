@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from .crypto_math import ED
 from .order_details import OrderCategory, OrderSide, OrderType
 from .instrument import InstrumentInfo
-from advparser.exceptions import ErrorUpdateCurrentPrice, ErrorPlaceOrder, \
-                                 ErrorSetTradingStop, ErrorGetInstrumentInfo
+from .exceptions import ErrorUpdateCurrentPrice, ErrorPlaceOrder, \
+                        ErrorSetTradingStop, ErrorGetInstrumentInfo
 from .order_details import MarketPosition
 
 logger = logging.getLogger(__name__)
