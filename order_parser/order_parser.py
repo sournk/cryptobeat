@@ -74,12 +74,17 @@ def main() -> None:
     # except:
     #     pass
 
+
+    from simpleorder.instrument import PriceFilter
+
+
+    o = MarketPosition(3, 0.01)
     so = SimpleOrder(category=OrderCategory.LINEAR,
                      type=OrderType.MARKET,
                     #  symbol='PEOPLEUSDT',
                      symbol='BTCUSDT',
                      side=OrderSide.BUY,
-                     open=MarketPosition(3, 0.01),
+                     open=o,
                      stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
                      take_profits=[MarketPosition(3, 0.055555555555555), 
                                    MarketPosition(1, 0.03),

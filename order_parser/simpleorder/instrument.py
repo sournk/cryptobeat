@@ -1,23 +1,37 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+
+from simpleorder.crypto_math import ED
 
 
 class LeverageFilter(BaseModel):
-    minLeverage: float
-    maxLeverage: float
-    leverageStep: float
+    minLeverage: ED
+    maxLeverage: ED
+    leverageStep: ED
 
 
 class PriceFilter(BaseModel):
-    minPrice: float
-    maxPrice: float
-    tickSize: float
+    minPrice: ED
+    maxPrice: ED
+    tickSize: ED
+
+    @validator('*')
+    def cast_to_ED_type(cls, v):
+        print(v)
+        return ED(v)
+    
+    class Config():
+        validate_assignment = True
 
 
 class LotSizeFilter(BaseModel):
-    maxOrderQty: float
-    minOrderQty: float
-    qtyStep: float
-    postOnlyMaxOrderQty: float
+    maxOrderQty: ED
+    minOrderQty: ED
+    qtyStep: ED
+    postOnlyMaxOrderQty: ED
+
+    @validator('*')
+    def cast_to_ED_type(cls, v):
+        return ED(v)
 
 
 class InstrumentInfo(BaseModel):
@@ -26,8 +40,12 @@ class InstrumentInfo(BaseModel):
     launchTime: str
     deliveryTime: str
     deliveryFeeRate: str
-    priceScale: float
+    priceScale: ED
     leverageFilter: LeverageFilter
     priceFilter: PriceFilter
     lotSizeFilter: LotSizeFilter
     fundingInterval: int
+
+    @validator('priceScale')
+    def cast_to_ED_type(cls, v):
+        return ED(v)

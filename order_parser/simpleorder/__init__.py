@@ -6,6 +6,7 @@ from pybit.unified_trading import HTTP
 
 from dataclasses import dataclass, field
 
+from .crypto_math import ED
 from .order_details import OrderCategory, OrderSide, OrderType
 from .instrument import InstrumentInfo
 from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder, \
@@ -53,7 +54,7 @@ class SimpleOrder():
     current_profits: dict[MarketPosition, MarketPosition] = field(
         init=False, default_factory=dict)
 
-    risk_rate: float = field(init=False, default=0)  # Risk rate against open
+    risk_rate: ED = field(init=False, default=0)  # Risk rate against open
 
     def __post_init__(self) -> None:
         self.id = self.generate_id()
@@ -168,7 +169,7 @@ class SimpleOrder():
         for take_profit in self.take_profits:
             take_profit.fit(self.instrument_info)
 
-    def update_current_price_from_exchange(self) -> float:
+    def update_current_price_from_exchange(self) -> ED:
         '''Updates current price from exchange'''
 
         url = "https://api-testnet.bybit.com/derivatives/v3/public/tickers"
@@ -190,7 +191,7 @@ class SimpleOrder():
         try:
             data = list(filter(lambda d: d['symbol'].find(
                 self.symbol) == 0, response['result']['list']))[0]
-            self.current.price = float(data['lastPrice'])
+            self.current.price = ED(data['lastPrice'])
             logger.info(f'{self.current=} updated')
         except Exception:
             logger.exception(
@@ -321,8 +322,8 @@ class SimpleOrder():
         self.set_partial_take_profits(session)
 
     def set_trailing_stop(self, session: HTTP,
-                          trailing_stop_price_distance: float,
-                          activation_price: float) -> None:
+                          trailing_stop_price_distance: ED,
+                          activation_price: ED) -> None:
         '''
         Add trailing stop to position
         '''
