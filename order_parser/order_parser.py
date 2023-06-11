@@ -94,8 +94,11 @@ def main() -> None:
         api_secret=config.SECRET_KEY,
     )
 
+    print(so)
+    print('')
     so.update_instrument_info_from_exchange(session)
-    print(so.instrument_info)
+    so.fit_market_positions()
+    print(so)
     # print(so)
 
     # try:

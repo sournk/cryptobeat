@@ -133,8 +133,8 @@ class SimpleOrder():
     def update_instrument_info_from_exchange(self, session: HTTP) -> None:
         ''' Get instrument info about symbol from exchange'''
         try:
-            logger.info(
-                'Start getting instrument info via '
+            logger.debug(
+                'Start updating instrument info via '
                 f'session.get_instruments_info() for order {self}')
             res = session.get_instruments_info(
                 category=self.category.value,
@@ -142,14 +142,31 @@ class SimpleOrder():
                 )
 
             if res['retCode'] != 0:
-                logger.error(f'Get instrument info error {res}')
+                logger.error(f'Update instrument info for order {self} '
+                             f'API error {res}')
                 raise ErrorGetInstrumentInfo(res)
             self.instrument_info = InstrumentInfo(**res['result']['list'][0])
             logger.info(
-                f'Instrument info successfully got {res}')
+                f'Instrument info for order {self.id=} '
+                f'{self.symbol=} successfully updated')
         except Exception as e:
-            logger.error(f'Get instrument info error {e}')
+            logger.error(f'Update instrument info for order {self} exception {e}')
             raise ErrorGetInstrumentInfo
+
+    def fit_market_positions(self) -> None:
+        '''
+        Fit all market postions of the order
+        '''
+        if self.instrument_info is None:
+            return
+
+        self.open.fit(instrument_info=self.instrument_info)
+
+        for stop_loss in self.stop_losses:
+            stop_loss.fit(self.instrument_info)
+
+        for take_profit in self.take_profits:
+            take_profit.fit(self.instrument_info)
 
     def update_current_price_from_exchange(self) -> float:
         '''Updates current price from exchange'''
@@ -159,7 +176,7 @@ class SimpleOrder():
         payload = {}
         headers = {}
 
-        logger.info(
+        logger.debug(
             f"Requesting exchange tickers requests.request('GET', url={url}) ")
         try:
             response = requests.request(
@@ -188,7 +205,7 @@ class SimpleOrder():
         '''
         Places order by open price
         '''
-        logger.info(f'Placing order via session.place_order() {self}')
+        logger.debug(f'Placing order via session.place_order() {self}')
         try:
             tp = self.take_profits[-1].price if self.take_profits else 0
             sl = self.stop_losses[-1].price if self.stop_losses else 0
@@ -205,13 +222,16 @@ class SimpleOrder():
             )
             if res['retCode'] == 0:
                 self.external_id = res['result']['orderId']
-                logger.info(f'Order successfully placed {res}')
+                logger.info(f'Order {self.id=} successfully placed'
+                            f'{self.symbol=} {self.side=} {self.type=}'
+                            f'{self.qty=} {self.open.price=}'
+                            f'{tp=} {sl=}')
             else:
-                logger.error(f'Place order error {res}')
+                logger.error(f'Place order {self} API error {res}')
                 raise ErrorPlaceOrder(res)
 
         except Exception as e:
-            logger.exception(f'Error placing order {e}')
+            logger.exception(f'Place order exception {e}')
             raise ErrorPlaceOrder
 
     def set_partial_take_profits(self, session: HTTP) -> None:
@@ -220,11 +240,11 @@ class SimpleOrder():
         which is set inside place_order()
         '''
         if self.take_profits:
-            logger.info(
+            logger.debug(
                 f'Start setting {len(self.take_profits)} partial take profits '
                 f'via session.set_trading_stop() for order {self}')
             for num, take_profit in enumerate(self.take_profits[0:-1]):
-                logger.info(
+                logger.debug(
                     f'Setting partial take profit {num} {take_profit=}')
 
                 try:
@@ -240,14 +260,17 @@ class SimpleOrder():
                         positionIdx=0
                     )
                     if res['retCode'] != 0:
-                        logger.error(f'Set partial take profit error {res}')
+                        logger.error('Set partial take profit for order'
+                                     f'{self} API error {res}')
                         raise ErrorSetTradingStop(res)
                     else:
-                        logger.info('Partial take profit successfully set '
-                                    f'{res}')
+                        logger.info(f'Partial take profit for order {self.id=}'
+                                    f'{self.symbol=} successfully set at '
+                                    f'{take_profit.qty=} {take_profit.price=}')
 
                 except Exception as e:
-                    logger.exception(f'Error setting partial take profit {e}')
+                    logger.exception('Set partial take profit for order '
+                                     f'{self} exception {e}')
                     raise ErrorSetTradingStop
 
     def set_partial_stop_losses(self, session: HTTP) -> None:
@@ -256,11 +279,11 @@ class SimpleOrder():
         which is set inside place_order()
         '''
         if self.stop_losses:
-            logger.info(
+            logger.debug(
                 f'Start setting {len(self.stop_losses)} partial stop losses '
                 f'via session.set_trading_stop() for order {self}')
             for num, stop_loss in enumerate(self.stop_losses[0:-1]):
-                logger.info(
+                logger.debug(
                     f'Setting partial stop loss {num} {stop_loss=}')
 
                 try:
@@ -276,14 +299,17 @@ class SimpleOrder():
                         positionIdx=0
                     )
                     if res['retCode'] != 0:
-                        logger.error(f'Set partial stop loss error {res}')
+                        logger.error(f'Set partial stop loss for order {self} '
+                                     f'API error {res}')
                         raise ErrorSetTradingStop(res)
-
-                    logger.info(
-                        f'Partial stop loss successfully set {res}')
+                    
+                    logger.info(f'Partial stop loss for order {self.id=}'
+                                f'{self.symbol=} successfully set at '
+                                f'{stop_loss.qty=} {stop_loss.price=}')
 
                 except Exception as e:
-                    logger.exception(f'Error setting partial stop loss {e}')
+                    logger.exception('Set partial stop loss for order '
+                                     f'{self} exception {e}')
                     raise ErrorSetTradingStop
 
     def set_trading_stop(self, session: HTTP) -> None:
@@ -305,7 +331,7 @@ class SimpleOrder():
         which is set inside place_order()
         '''
         if self.take_profits:
-            logger.info(
+            logger.debug(
                 f'Start setting trailing stop via '
                 f'session.set_trading_stop() for order {self}')
 
@@ -318,12 +344,16 @@ class SimpleOrder():
                     positionIdx=0
                 )
                 if res['retCode'] != 0:
-                    logger.error(f'Set trailing stop error {res}')
+                    logger.error(f'Set trailing stop for order {self} '
+                                 f'API error {res}')
                     raise ErrorSetTradingStop(res)
                 else:
                     logger.info(
-                        f'Trailing stop successfully set {res}')
+                        f'Trailing stop for order {self.id=} '
+                        f'{self.symbol=} successfully set at'
+                        f'{trailing_stop_price_distance=} {activation_price=}')
 
             except Exception as e:
-                logger.exception(f'Error setting trailing stop {e}')
+                logger.exception(f'Set trailing stop for order {self} '
+                                 f'exception {e}')
                 raise ErrorSetTradingStop

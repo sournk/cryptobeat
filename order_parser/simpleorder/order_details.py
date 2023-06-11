@@ -74,7 +74,7 @@ class MarketPosition():
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.qty=}, '\
-            '{self.price=}, {self.value=})'
+            f'{self.price=}, {self.value=})'
 
     def __add__(self, other):
         new_price = (self.value + other.value) / (self.qty + other.qty)\
@@ -110,8 +110,8 @@ class MarketPosition():
         return self.qty
 
     def fit(self, instrument_info: InstrumentInfo) -> None:
-        self.fit_price()
-        self.fit_qty()
+        self.fit_price(instrument_info)
+        self.fit_qty(instrument_info)
 
 
 def roundup(x, ticksize):

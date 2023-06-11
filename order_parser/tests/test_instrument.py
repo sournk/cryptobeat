@@ -81,30 +81,38 @@ class MarketPositionTests(unittest.TestCase):
     def test_fit_decimal_price(self):
         mp = MarketPosition(price=12.7,
                             qty=100)
+        self.assertEqual(mp.value, 12.7*100)
         self.instrument_info_people.priceFilter.tickSize = 0.33
         mp.fit_price(instrument_info=self.instrument_info_people)
         self.assertEqual(mp.price, 12.54)
+        self.assertEqual(mp.value, 12.54*100)
 
     def test_fit_int_tick(self):
         mp = MarketPosition(price=12.7,
                             qty=100)
+        self.assertEqual(mp.value, 12.7*100)
         self.instrument_info_people.priceFilter.tickSize = 1
         mp.fit_price(instrument_info=self.instrument_info_people)
         self.assertEqual(mp.price, 13)
+        self.assertEqual(mp.value, 13*100)
 
     def test_fit_decimal_qtyStep(self):
         mp = MarketPosition(price=12.7,
                             qty=100.3)
+        self.assertEqual(mp.value, 12.7*100.3)
         self.instrument_info_people.lotSizeFilter.qtyStep = 0.2
         mp.fit_qty(instrument_info=self.instrument_info_people)
         self.assertEqual(mp.qty, 100.2)
+        self.assertEqual(mp.value, 12.7*100.2)
 
     def test_fit_int_qtyStep(self):
         mp = MarketPosition(price=12.7,
                             qty=101.3)
+        self.assertEqual(mp.value, 12.7*101.3)
         self.instrument_info_people.lotSizeFilter.qtyStep = 2
         mp.fit_qty(instrument_info=self.instrument_info_people)
         self.assertEqual(mp.qty, 102)
+        self.assertEqual(mp.value, 12.7*102)
 
 
 class InstrumentInfoTests(unittest.TestCase):
