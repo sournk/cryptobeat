@@ -1,6 +1,5 @@
 import copy
 import uuid
-import requests
 import logging
 from pybit.unified_trading import HTTP
 
@@ -21,6 +20,7 @@ class TrailingStop():
     distance: MarketPosition = field()
     activation_price: MarketPosition = field()
     active: bool = field(default=False)
+
 
 @dataclass
 class SimpleOrder():
@@ -68,9 +68,10 @@ class SimpleOrder():
     def __post_init__(self) -> None:
         self.id = self.generate_id()
         self.current = copy.copy(self.open)
-        self.trailing_stop = TrailingStop(active=False,
-                                          distance=MarketPosition(0, 0),
-                                          activation_price=MarketPosition(0, 0))
+        self.trailing_stop = TrailingStop(
+            active=False,
+            distance=MarketPosition(0, 0),
+            activation_price=MarketPosition(0, 0))
 
     def generate_id(self) -> str:
         '''Generated ID as uuid64'''
@@ -185,7 +186,6 @@ class SimpleOrder():
         if self.trailing_stop and self.trailing_stop.active:
             self.trailing_stop.distance.fit(self.instrument_info)
             self.trailing_stop.activation_price.fit(self.instrument_info)
-
 
     def api_update_current_price(self, session: HTTP) -> ED:
         '''Updates current price from exchange ticker'''
