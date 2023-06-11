@@ -1,10 +1,12 @@
+import copy
 import pprint
 import sys
 import logging
 from logging import StreamHandler, Formatter
 
 import config
-from simpleorder import OrderSide, OrderCategory, OrderType, SimpleOrder, MarketPosition, logger
+from simpleorder import OrderSide, OrderCategory, OrderType, \
+    SimpleOrder, MarketPosition, TrailingStop, logger
 # , ComplexOrder, AdviserPrediction
 
 from pybit.unified_trading import HTTP
@@ -83,22 +85,25 @@ def main() -> None:
     so = SimpleOrder(category=OrderCategory.LINEAR,
                      type=OrderType.MARKET,
                      symbol='PEOPLEUSDT',
-                    #  symbol='BTCUSDT',
                      side=OrderSide.BUY,
                      open=MarketPosition(3, 0.02),
                      stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
-                     take_profits=[MarketPosition(3, 0.055555555555555), 
+                     take_profits=[MarketPosition(3, 0.055555555555555),
                                    MarketPosition(1, 0.03),
                                    MarketPosition(1, 0.04)])
 
     print(so.api_update_current_price(session))
     so.api_update_instrument_info(session)
-    so.fit_market_positions()
+    so.fit_market_positions()    
     so.api_place_order(session)
     so.api_set_trading_stop(session)
-    so.api_set_trailing_stop(session, 
-                             trailing_stop_price_distance=abs(so.current.price-so.take_profits[0].price),
-                             activation_price=so.take_profits[0].price)
+
+    dist = MarketPosition(0, so.take_profits[0].price - so.current.price)
+    trailing_stop = TrailingStop(active=True,
+                                 distance=dist,
+                                 activation_price=so.take_profits[0])
+    so.api_set_trailing_stop(session=session,
+                             trailing_stop=trailing_stop)
 
 
     print('Done')

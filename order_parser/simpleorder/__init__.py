@@ -17,6 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class TrailingStop():
+    distance: MarketPosition = field()
+    activation_price: MarketPosition = field()
+    active: bool = field(default=False)
+
+@dataclass
 class SimpleOrder():
     '''Class of Market Order'''
 
@@ -40,6 +46,9 @@ class SimpleOrder():
     take_profits: list[MarketPosition] = field(
         default_factory=list)  # Order take profits list
 
+    # Trailing stop
+    trailing_stop: TrailingStop = field(init=False)
+
     # List of losses relative to open MarketPosition
     open_losses: dict[MarketPosition, MarketPosition] = field(
         init=False, default_factory=dict)
@@ -59,6 +68,9 @@ class SimpleOrder():
     def __post_init__(self) -> None:
         self.id = self.generate_id()
         self.current = copy.copy(self.open)
+        self.trailing_stop = TrailingStop(active=False,
+                                          distance=MarketPosition(0, 0),
+                                          activation_price=MarketPosition(0, 0))
 
     def generate_id(self) -> str:
         '''Generated ID as uuid64'''
@@ -169,6 +181,11 @@ class SimpleOrder():
 
         for take_profit in self.take_profits:
             take_profit.fit(self.instrument_info)
+
+        if self.trailing_stop and self.trailing_stop.active:
+            self.trailing_stop.distance.fit(self.instrument_info)
+            self.trailing_stop.activation_price.fit(self.instrument_info)
+
 
     def api_update_current_price(self, session: HTTP) -> ED:
         '''Updates current price from exchange ticker'''
@@ -322,9 +339,9 @@ class SimpleOrder():
         # self.set_partial_stop_losses(session)
         self.set_partial_take_profits(session)
 
-    def api_set_trailing_stop(self, session: HTTP,
-                              trailing_stop_price_distance: ED,
-                              activation_price: ED) -> None:
+    def api_set_trailing_stop(self,
+                              trailing_stop: TrailingStop,
+                              session: HTTP) -> None:
         '''
         Add trailing stop to position
         '''
@@ -332,7 +349,8 @@ class SimpleOrder():
         Adds partial TP. Partial means all of them except last=best,
         which is set inside place_order()
         '''
-        if self.take_profits:
+        self.trailing_stop = trailing_stop
+        if self.trailing_stop and self.trailing_stop.active:
             logger.debug(
                 f'Start setting trailing stop via '
                 f'session.set_trading_stop() for order {self}')
@@ -341,8 +359,8 @@ class SimpleOrder():
                 res = session.set_trading_stop(
                     category=self.category.value,
                     symbol=self.symbol,
-                    trailingStop=str(trailing_stop_price_distance),
-                    activePrice=str(activation_price),
+                    trailingStop=str(self.trailing_stop.distance.price),
+                    activePrice=str(self.trailing_stop.activation_price.price),
                     positionIdx=0
                 )
                 if res['retCode'] != 0:
@@ -353,7 +371,7 @@ class SimpleOrder():
                     logger.info(
                         f'Trailing stop for order {self.id=} '
                         f'{self.symbol=} successfully set at'
-                        f'{trailing_stop_price_distance=} {activation_price=}')
+                        f'{self.trailing_stop=}')
 
             except Exception as e:
                 logger.exception(f'Set trailing stop for order {self} '
