@@ -1,6 +1,7 @@
 class WrongMarketPosition(Exception):
     pass
 
+
 class WrongSimpleOrder(Exception):
     pass
 
@@ -21,10 +22,6 @@ class WrongStopLossPrice(WrongSimpleOrder):
     pass
 
 
-class CantRequestSymbolTicker(Exception):
-    pass
-
-
 class ErrorPlaceOrder(Exception):
     pass
 
@@ -34,4 +31,8 @@ class ErrorSetTradingStop(Exception):
 
 
 class ErrorGetInstrumentInfo(Exception):
+    pass
+
+
+class ErrorUpdateCurrentPrice(Exception):
     pass

@@ -8,7 +8,7 @@ from pybit.unified_trading import HTTP
 
 from dataclasses import dataclass, field
 from enum import Enum
-from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder
+from advparser.exceptions import ErrorPlaceOrder
 
 logger = logging.getLogger(__name__)
 

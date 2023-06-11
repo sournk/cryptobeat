@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from .crypto_math import ED
 from .order_details import OrderCategory, OrderSide, OrderType
 from .instrument import InstrumentInfo
-from advparser.exceptions import CantRequestSymbolTicker, ErrorPlaceOrder, \
+from advparser.exceptions import ErrorUpdateCurrentPrice, ErrorPlaceOrder, \
                                  ErrorSetTradingStop, ErrorGetInstrumentInfo
 from .order_details import MarketPosition
 
@@ -131,7 +131,7 @@ class SimpleOrder():
             if self.open_losses else 0
         self.risk_rate = max_profit / max_loss if max_loss != 0 else 0
 
-    def update_instrument_info_from_exchange(self, session: HTTP) -> None:
+    def api_update_instrument_info(self, session: HTTP) -> None:
         ''' Get instrument info about symbol from exchange'''
         try:
             logger.debug(
@@ -170,40 +170,37 @@ class SimpleOrder():
         for take_profit in self.take_profits:
             take_profit.fit(self.instrument_info)
 
-    def update_current_price_from_exchange(self) -> ED:
-        '''Updates current price from exchange'''
-
-        url = "https://api-testnet.bybit.com/derivatives/v3/public/tickers"
-
-        payload = {}
-        headers = {}
-
-        logger.debug(
-            f"Requesting exchange tickers requests.request('GET', url={url}) ")
-        try:
-            response = requests.request(
-                "GET", url, headers=headers, data=payload).json()
-        except Exception:
-            logger.exception(
-                f"Error of requests.request('GET', url={url}) "
-                "exchange tickers")
-            raise CantRequestSymbolTicker
+    def api_update_current_price(self, session: HTTP) -> ED:
+        '''Updates current price from exchange ticker'''
 
         try:
-            data = list(filter(lambda d: d['symbol'].find(
-                self.symbol) == 0, response['result']['list']))[0]
-            self.current.price = ED(data['lastPrice'])
-            logger.info(f'{self.current=} updated')
-        except Exception:
+            logger.debug("Requesting exchange tickers "
+                         "via session.get_tickers() "
+                         f"for order {self}")
+            res = session.get_tickers(
+                category=self.category.value,
+                symbol=self.symbol,
+                )
+
+            if res['retCode'] != 0:
+                logger.error(f'Update current price for order {self} '
+                             f'API error {res}')
+                raise ErrorUpdateCurrentPrice(res)
+            self.current.price = ED(res['result']['list'][0]['markPrice'])
+            self.update()
+            logger.info(
+                f'Current price for order {self.id=} '
+                f'{self.symbol=} successfully updated to {self.current.price}')
+        except Exception as e:
             logger.exception(
-                f'Error price update. Not found {self.symbol=} in exchange '
-                'tickers list')
-            raise CantRequestSymbolTicker
+                f"Update current price for order {self}  "
+                f"exception {e}")
+            raise ErrorUpdateCurrentPrice
 
         self.update()
-        return self.current
+        return self.current.price
 
-    def place_order(self, session: HTTP) -> None:
+    def api_place_order(self, session: HTTP) -> None:
         '''
         Places order by open price
         '''
@@ -224,10 +221,13 @@ class SimpleOrder():
             )
             if res['retCode'] == 0:
                 self.external_id = res['result']['orderId']
-                logger.info(f'Order {self.id=} successfully placed'
-                            f'{self.symbol=} {self.side=} {self.type=}'
-                            f'{self.qty=} {self.open.price=}'
-                            f'{tp=} {sl=}')
+                self.current.qty = self.open.qty
+                self.api_update_current_price(session)
+                logger.info(f'Order {self.id=} successfully placed '
+                    f'{self.symbol=} {self.side.value=} '
+                    f'{self.type.value=} {self.open.qty=} '
+                    f'{self.open.price=} {self.current.price=} '
+                    f'{tp=} {sl=}')
             else:
                 logger.error(f'Place order {self} API error {res}')
                 raise ErrorPlaceOrder(res)
@@ -314,7 +314,7 @@ class SimpleOrder():
                                      f'{self} exception {e}')
                     raise ErrorSetTradingStop
 
-    def set_trading_stop(self, session: HTTP) -> None:
+    def api_set_trading_stop(self, session: HTTP) -> None:
         '''
         Adds partial SL and TP. Partial means all of them except last=best,
         which is set inside place_order()
@@ -322,9 +322,9 @@ class SimpleOrder():
         # self.set_partial_stop_losses(session)
         self.set_partial_take_profits(session)
 
-    def set_trailing_stop(self, session: HTTP,
-                          trailing_stop_price_distance: ED,
-                          activation_price: ED) -> None:
+    def api_set_trailing_stop(self, session: HTTP,
+                              trailing_stop_price_distance: ED,
+                              activation_price: ED) -> None:
         '''
         Add trailing stop to position
         '''

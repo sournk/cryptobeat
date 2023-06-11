@@ -74,76 +74,32 @@ def main() -> None:
     # except:
     #     pass
 
-
-    
-
-    o = MarketPosition(3, 0.01)
-    so = SimpleOrder(category=OrderCategory.LINEAR,
-                     type=OrderType.MARKET,
-                    #  symbol='PEOPLEUSDT',
-                     symbol='BTCUSDT',
-                     side=OrderSide.BUY,
-                     open=o,
-                     stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
-                     take_profits=[MarketPosition(3, 0.055555555555555), 
-                                   MarketPosition(1, 0.03),
-                                   MarketPosition(1, 0.04)])
-
-    # so.update_current_price_from_exchange()
-
-
     session = HTTP(
         testnet=False,
         api_key=config.API_KEY,
         api_secret=config.SECRET_KEY,
     )
 
-    print(so)
-    print('')
-    so.update_instrument_info_from_exchange(session)
-    print('')
-    print(so.instrument_info)
-    print('')
+    so = SimpleOrder(category=OrderCategory.LINEAR,
+                     type=OrderType.MARKET,
+                     symbol='PEOPLEUSDT',
+                    #  symbol='BTCUSDT',
+                     side=OrderSide.BUY,
+                     open=MarketPosition(3, 0.02),
+                     stop_losses=[MarketPosition(1, 0.005), MarketPosition(1, 0.002)],
+                     take_profits=[MarketPosition(3, 0.055555555555555), 
+                                   MarketPosition(1, 0.03),
+                                   MarketPosition(1, 0.04)])
+
+    print(so.api_update_current_price(session))
+    so.api_update_instrument_info(session)
     so.fit_market_positions()
-    print(so)
-    # print(so)
+    so.api_place_order(session)
+    so.api_set_trading_stop(session)
+    so.api_set_trailing_stop(session, 
+                             trailing_stop_price_distance=abs(so.current.price-so.take_profits[0].price),
+                             activation_price=so.take_profits[0].price)
 
-    # try:
-    #     so.place_order(session)
-    # except:
-    #     pass
-
-    # try:
-    #     so.set_trading_stop(session)
-    # except:
-    #     pass
-
-    # try:
-    #     so.set_trailing_stop(session, 
-    #                         trailing_stop_price_distance=so.take_profits[0].price-so.open.price,
-    #                         activation_price=so.take_profits[0].price)
-    # except:
-    #     pass
-
-    # print(so)
-    # print(f'{so.open_losses[so.stop_losses[0]].roi=}')
-    # print(f'{so.open_losses[so.stop_losses[0]].value=}')
-    # print(f'{so.open_profits[so.take_profits[0]].roi=}')
-    # print(f'{so.open_profits[so.take_profits[0]].value=}')
-    # print(f'{so.risk_rate}')
-
-    # print('Done')
-
-    # print(session.get_orderbook(category="linear", symbol="PEOPLEUSDT"))
-
-    # print(session.place_order(
-    #     category="linear",
-    #     symbol="PEOPLEUSDT",
-    #     side="Buy",
-    #     orderType="Market",
-    #     qty=1,
-    #     price=0.01,
-    # ))
 
     print('Done')
 
