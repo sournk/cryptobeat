@@ -4,3 +4,4 @@
 /.vscode
 order_parser/secret.py
 *.pyc
+research/secret.py
