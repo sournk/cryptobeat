@@ -5,3 +5,4 @@
 order_parser/secret.py
 *.pyc
 research/secret.py
+order_parser/__pycache__/secret.cpython-39.pyc

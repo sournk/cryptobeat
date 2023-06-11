@@ -75,8 +75,7 @@ def main() -> None:
     #     pass
 
 
-    from simpleorder.instrument import PriceFilter
-
+    
 
     o = MarketPosition(3, 0.01)
     so = SimpleOrder(category=OrderCategory.LINEAR,
@@ -102,6 +101,9 @@ def main() -> None:
     print(so)
     print('')
     so.update_instrument_info_from_exchange(session)
+    print('')
+    print(so.instrument_info)
+    print('')
     so.fit_market_positions()
     print(so)
     # print(so)
