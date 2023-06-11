@@ -8,6 +8,13 @@ class LeverageFilter(BaseModel):
     maxLeverage: ED
     leverageStep: ED
 
+    @validator('*')
+    def cast_to_ED_type(cls, v):
+        return ED(v)
+
+    class Config():
+        validate_assignment = True
+
 
 class PriceFilter(BaseModel):
     minPrice: ED
@@ -18,7 +25,7 @@ class PriceFilter(BaseModel):
     def cast_to_ED_type(cls, v):
         print(v)
         return ED(v)
-    
+
     class Config():
         validate_assignment = True
 
@@ -32,6 +39,9 @@ class LotSizeFilter(BaseModel):
     @validator('*')
     def cast_to_ED_type(cls, v):
         return ED(v)
+
+    class Config():
+        validate_assignment = True
 
 
 class InstrumentInfo(BaseModel):

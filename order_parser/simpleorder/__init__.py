@@ -151,7 +151,8 @@ class SimpleOrder():
                 f'Instrument info for order {self.id=} '
                 f'{self.symbol=} successfully updated')
         except Exception as e:
-            logger.error(f'Update instrument info for order {self} exception {e}')
+            logger.error(f'Update instrument info for order {self} '
+                         f'exception {e}')
             raise ErrorGetInstrumentInfo
 
     def fit_market_positions(self) -> None:
@@ -303,7 +304,7 @@ class SimpleOrder():
                         logger.error(f'Set partial stop loss for order {self} '
                                      f'API error {res}')
                         raise ErrorSetTradingStop(res)
-                    
+
                     logger.info(f'Partial stop loss for order {self.id=}'
                                 f'{self.symbol=} successfully set at '
                                 f'{stop_loss.qty=} {stop_loss.price=}')

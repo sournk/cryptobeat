@@ -44,7 +44,7 @@ class MarketPositionTests(unittest.TestCase):
                 '''
         self.instrument_info_people = InstrumentInfo.parse_raw(
             instrument_info_people_mock)
-        
+
         self.instrument_info_people.priceFilter.tickSize = ED(0.1)
 
     def test_initial_values(self):
