@@ -243,10 +243,10 @@ class SimpleOrder():
                 if self.type == OrderType.MARKET:
                     self.open = copy.copy(self.current)
                 logger.info(f'Order {self.id=} successfully placed '
-                    f'{self.symbol=} {self.side.value=} '
-                    f'{self.type.value=} {self.open.qty=} '
-                    f'{self.open.price=} {self.current.price=} '
-                    f'{tp=} {sl=}')
+                            f'{self.symbol=} {self.side.value=} '
+                            f'{self.type.value=} {self.open.qty=} '
+                            f'{self.open.price=} {self.current.price=} '
+                            f'{tp=} {sl=}')
             else:
                 logger.error(f'Place order {self} API error {res}')
                 raise ErrorPlaceOrder(res)
