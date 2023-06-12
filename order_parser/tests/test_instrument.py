@@ -1,7 +1,8 @@
 import unittest
 
-from simpleorder.order_details import ED, MarketPosition
-from simpleorder.instrument import InstrumentInfo
+from crypto_math import ED
+from market_utils.order_details import MarketPosition
+from market_utils.instrument import InstrumentInfo
 
 
 class MarketPositionTests(unittest.TestCase):

@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from .exceptions import AdviserPredictionOrderSideParseError, \
     AdviserPredictionOpenPriceParseError, AdviserPredictionStopLossParseError,\
     AdviserPredictionTakeProfitParseError
-from simpleorder.crypto_math import ED
-from simpleorder.order_details import OrderSide
+from crypto_math import ED
+from market_utils import OrderSide
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ class AdviserPrediction():
 
     side: OrderSide = field(init=False)
     opens: list[ED] = field(init=False, default_factory=list)
-    stop_losses: list[ED] = field(init=False)
-    take_profits: list[ED] = field(init=False)
+    stop_losses: list[ED] = field(init=False, default_factory=list)
+    take_profits: list[ED] = field(init=False, default_factory=list)
 
     def generate_id(self) -> str:
         '''Generated ID as uuid64'''
@@ -72,13 +72,13 @@ class AdviserPrediction():
                 f'No open price pattern found in {self.prediction_text=}')
 
         if 'sl' in prediction:
-            self.opens = prediction['sl']
+            self.stop_losses = prediction['sl']
         else:
             raise AdviserPredictionStopLossParseError(
                 f'No stop loss pattern found in {self.prediction_text=}')
 
         if 'tp' in prediction:
-            self.opens = prediction['tp']
+            self.take_profits = prediction['tp']
         else:
             raise AdviserPredictionTakeProfitParseError(
                 f'No take profit pattern found in {self.prediction_text=}')

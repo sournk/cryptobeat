@@ -6,11 +6,11 @@ from pybit.unified_trading import HTTP
 from dataclasses import dataclass, field
 
 from crypto_math import ED
-from .order_details import OrderCategory, OrderSide, OrderType
-from .instrument import InstrumentInfo
-from .exceptions import ErrorUpdateCurrentPrice, ErrorPlaceOrder, \
+from market_utils.order_details import OrderCategory, OrderSide, OrderType
+from market_utils.instrument import InstrumentInfo
+from simpleorder.exceptions import ErrorUpdateCurrentPrice, ErrorPlaceOrder, \
                         ErrorSetTradingStop, ErrorGetInstrumentInfo
-from .order_details import MarketPosition
+from market_utils import MarketPosition
 
 logger = logging.getLogger(__name__)
 

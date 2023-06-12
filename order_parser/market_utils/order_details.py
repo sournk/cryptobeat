@@ -4,7 +4,7 @@ from functools import total_ordering
 
 import crypto_math as crypto_math
 from crypto_math import ED
-from simpleorder.instrument import InstrumentInfo
+from .instrument import InstrumentInfo
 
 
 class OrderSide(Enum):
